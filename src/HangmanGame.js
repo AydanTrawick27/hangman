@@ -9,13 +9,12 @@ const words = ["Morehouse", "Spelman", "Basketball", "Table", "Museum", "Excelle
 class HangmanGame extends React.Component {
   state = {
     wordList: words,
-    curWordIndex: 0,      // points at the current word in the array
-    wrongCount: 0,        // how many incorrect guesses (which picture to show)
-    guessed: new Set(),   // correctly-guessed letters (lowercase)
-    missed: [],           // wrong letters in the order guessed
+    curWordIndex: 0,
+    wrongCount: 0,       // incorrect guesses
+    guessed: new Set(),
+    missed: [],
   };
 
-  // Go to the next word (wrapping around), reset counters.
   startNewGame = () => {
     this.setState((prev) => ({
       curWordIndex: (prev.curWordIndex + 1) % prev.wordList.length,
@@ -25,24 +24,21 @@ class HangmanGame extends React.Component {
     }));
   };
 
-  
   handleGuess = (rawLetter) => {
     if (!rawLetter) return;
     const letter = rawLetter.toLowerCase().trim();
     if (!/^[a-z]$/.test(letter)) return;
+
     const { wordList, curWordIndex, guessed, missed, wrongCount } = this.state;
     const word = wordList[curWordIndex].toLowerCase();
 
-    // already 
     if (guessed.has(letter) || missed.includes(letter)) return;
 
     if (word.includes(letter)) {
-      // correct guess
       const newGuessed = new Set(guessed);
       newGuessed.add(letter);
 
       this.setState({ guessed: newGuessed }, () => {
-        // win check
         const lettersOnly = new Set([...word].filter((c) => /[a-z]/.test(c)));
         const allFound = [...lettersOnly].every((c) => this.state.guessed.has(c));
         if (allFound) {
@@ -53,15 +49,13 @@ class HangmanGame extends React.Component {
         }
       });
     } else {
-      // wrong guess
       const nextWrong = wrongCount + 1;
       const newMissed = [...missed, letter];
 
       if (nextWrong >= pics.length - 1) {
-       
         this.setState({ wrongCount: nextWrong, missed: newMissed }, () => {
           setTimeout(() => {
-            alert("Game Over 😵");
+            alert("Game Over");
             this.startNewGame();
           }, 10);
         });
@@ -72,16 +66,13 @@ class HangmanGame extends React.Component {
   };
 
   renderWordBoxes(word, guessedSet) {
-    
     return (
       <div style={{ display: "flex", gap: 8, marginTop: 16, flexWrap: "wrap" }}>
         {[...word].map((ch, i) => {
           const isLetter = /[a-z]/i.test(ch);
           const visible = isLetter && guessedSet.has(ch.toLowerCase());
-          
-          if (!isLetter && ch === " ") {
-            return <div key={i} style={{ width: 14 }} />;
-          }
+          if (!isLetter && ch === " ") return <div key={i} style={{ width: 14 }} />;
+
           return (
             <LetterBox
               key={i}
@@ -106,25 +97,27 @@ class HangmanGame extends React.Component {
   }
 
   render() {
-  const { wordList, curWordIndex, guessed, missed, wrongCount } = this.state;
-  const word = wordList[curWordIndex] ?? "";
+    const { wordList, curWordIndex, guessed, missed, wrongCount } = this.state;
+    const word = wordList[curWordIndex] ?? "";
 
-  return (
-    <div>
-      <img src={"/" + pics[wrongCount]} alt="hangman" />
-      <button onClick={this.startNewGame}>New Game</button>
+    // ✅ compute image path here (has access to wrongCount)
+    const imgSrc = `${process.env.PUBLIC_URL}/${pics[Math.min(wrongCount, pics.length - 1)]}`;
 
-  
-      <SingleLetterSearchbar onSearch={this.handleGuess} />
+    return (
+      <div>
+        <img src={imgSrc} alt="hangman" />
+        <button onClick={this.startNewGame}>New Game</button>
 
-      {this.renderWordBoxes(word, guessed)}
-      <p>
-        <strong>Missed Letters:</strong> {missed.length ? missed.join(", ") : "None yet"}
-      </p>
-    </div>
-  );
-}
+        <SingleLetterSearchbar onSearch={this.handleGuess} />
 
+        {this.renderWordBoxes(word, guessed)}
+        <p>
+          <strong>Missed Letters:</strong>{" "}
+          {missed.length ? missed.join(", ") : "None yet"}
+        </p>
+      </div>
+    );
+  }
 }
 
 export default HangmanGame;
