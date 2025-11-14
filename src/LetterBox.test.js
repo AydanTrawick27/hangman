@@ -1,7 +1,6 @@
-// src/LetterBox.test.js
+
 import React from 'react';
 import { render, screen } from '@testing-library/react';
-import '@testing-library/jest-dom'; // ensures toBeVisible / toHaveStyle matchers
 import LetterBox from './LetterBox';
 
 describe('LetterBox', () => {
@@ -14,19 +13,15 @@ describe('LetterBox', () => {
         letterStyle={{ fontSize: 20 }}
       />
     );
-    const el = screen.getByText('A');
-    expect(el).toBeInTheDocument();
-    expect(el).toBeVisible();
+    
+    expect(screen.getByText('A')).toBeInTheDocument();
   });
 
   test('hides the letter when isVisible=false', () => {
-    render(<LetterBox letter="B" isVisible={false} />);
-    // Your component renders the letter but hidden (e.g., visibility: hidden)
-    const el = screen.getByText('B');
-    expect(el).toBeInTheDocument();
-    expect(el).not.toBeVisible();
-    // If you ever switch to rendering an empty string instead, change to:
-    // expect(screen.queryByText('B')).not.toBeInTheDocument();
+   render(<LetterBox letter="B" isVisible={false} />);
+ const el = screen.getByText('B');
+ expect(el).toBeInTheDocument();
+ expect(el).not.toBeVisible();  
   });
 
   test('applies boxStyle and letterStyle (smoke check)', () => {
@@ -38,6 +33,7 @@ describe('LetterBox', () => {
         letterStyle={{ fontWeight: 700 }}
       />
     );
+
     expect(container.firstChild).toHaveStyle('border: 2px solid rgb(0, 0, 0)');
     expect(screen.getByText('C')).toHaveStyle('font-weight: 700');
   });

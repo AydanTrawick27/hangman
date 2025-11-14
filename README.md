@@ -66,6 +66,15 @@ npm start
 
 
 ---
+## Tests
+Install deps:
+```bash
+npm install
+
+To run the test after use:
+```bash
+npm test
+
 
 
 >>>>>>> 537a4f1c (Initial commit: Hangman game)
