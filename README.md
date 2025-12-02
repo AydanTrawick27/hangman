@@ -1,50 +1,54 @@
-# Hangman Game (React)
+# Hangman Game (React + Node + DynamoDB Local)
 
-A simple, interactive Hangman game built with **React**.  
-Players can guess letters one at a time, see correct guesses revealed in real time, and watch the hangman graphic progress as incorrect guesses increase. When the maximum number of wrong guesses is reached, the game ends and automatically loads the next word.
+A simple, interactive Hangman game built with **React** and a small Node/Express API backed by **DynamoDB Local**.
 
----
-
-## Demo
-
--  Guess letters through a search bar  
--  Correct guesses appear in the letter boxes  
--  Wrong guesses display at the bottom and advance the hangman image  
--  “Game Over” alert when max wrong guesses are reached  
--   New Game button loads the next word
+Players can log in with a name, have their wins/losses stored, and then play Hangman in the browser.
 
 ---
 
+## Features
+
+- React front-end Hangman game
+- Login screen that stores a player name
+- Player stats (wins, losses, win %)
+- Node/Express API (`api/server.js`) for reading/writing player data
+- DynamoDB Local used as the backing data store (via Docker)
 
 ---
 
-## How to Play
+## Prerequisites
 
-1. Click in the search bar and enter a **single letter**.  
-2. If the letter is in the word, it will appear in its position.  
-3. If the letter is not in the word:
-   - It will be added to the **Missed Letters** list.
-   - The hangman image will update to the next stage.
-4. When the hangman reaches the final stage, a **Game Over** alert will appear and the game resets to a new word.
-5. You can click **“New Game”** at any time to skip to the next word.
+- **Node.js** and **npm** (for running tests or local dev without Docker)
+- **Docker** and **Docker Compose** (for running the full stack)
 
 ---
-## Install the following to start
 
-npm install
-npm start
+## Project Structure 
+
+- `src/` – React front end (Hangman UI, Login, etc.)
+- `api/server.js` – Node/Express server that exposes:
+  - `GET /api/player`
+  - `POST /api/players`
+  - `PUT /api/player`
+- `api/dynamoClient.js` – DynamoDB DocumentClient configuration
+- `docker-compose.yml` – Spins up:
+  - DynamoDB Local
+  - DynamoDB admin UI
+  - API service
+  - React UI
+
+The **server file required** is `api/server.js`.  
+When using Docker Compose you do **not** run this manually – Docker starts it for you.  
 
 
 ---
-## Tests
-Install deps:
+
+## Running the Project with Docker Compose (recommended)
+
+This is the easiest way to run **the whole app**: UI + API + DynamoDB Local.
+
+From the project root:
+
 ```bash
-npm install
-
-## To run the test after use:
-```bash
-npm test
-
-
-
-
+# Build and start all services (UI, API, DynamoDB Local, admin UI)
+docker compose up --build

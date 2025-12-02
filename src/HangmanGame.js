@@ -3,16 +3,33 @@ import React from "react";
 import LetterBox from "./LetterBox";
 import SingleLetterSearchbar from "./SingleLetterSearchBar";
 
-const pics = ["noose.png", "upperBody.png", "upperandlower.png", "1arm.png", "botharms.png"];
-const words = ["Morehouse", "Spelman", "Basketball", "Table", "Museum", "Excellent", "Fun", "React"];
+const pics = [
+  "noose.png",
+  "upperBody.png",
+  "upperandlower.png",
+  "1arm.png",
+  "botharms.png",
+];
+const words = [
+  "Morehouse",
+  "Spelman",
+  "Basketball",
+  "Table",
+  "Museum",
+  "Excellent",
+  "Fun",
+  "React",
+];
 
 class HangmanGame extends React.Component {
   state = {
     wordList: words,
     curWordIndex: 0,
-    wrongCount: 0,       // incorrect guesses
+    wrongCount: 0,
     guessed: new Set(),
     missed: [],
+    wins: 0,
+    losses: 0,
   };
 
   startNewGame = () => {
@@ -22,6 +39,40 @@ class HangmanGame extends React.Component {
       guessed: new Set(),
       missed: [],
     }));
+  };
+
+  // 📊 PUT stats to API
+  updatePlayerStats = async (wins, losses) => {
+    const { playerName } = this.props; // passed in from App/Login
+    if (!playerName) return;
+
+    try {
+      await fetch("http://localhost:3001/player", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          playerName,
+          wins,
+          losses,
+        }),
+      });
+    } catch (err) {
+      console.error("Failed to update stats", err);
+    }
+  };
+
+  handleWin = () => {
+    const wins = this.state.wins + 1;
+    this.setState({ wins }, () => {
+      this.updatePlayerStats(wins, this.state.losses);
+    });
+  };
+
+  handleLoss = () => {
+    const losses = this.state.losses + 1;
+    this.setState({ losses }, () => {
+      this.updatePlayerStats(this.state.wins, losses);
+    });
   };
 
   handleGuess = (rawLetter) => {
@@ -39,11 +90,16 @@ class HangmanGame extends React.Component {
       newGuessed.add(letter);
 
       this.setState({ guessed: newGuessed }, () => {
-        const lettersOnly = new Set([...word].filter((c) => /[a-z]/.test(c)));
-        const allFound = [...lettersOnly].every((c) => this.state.guessed.has(c));
+        const lettersOnly = new Set(
+          [...word].filter((c) => /[a-z]/.test(c))
+        );
+        const allFound = [...lettersOnly].every((c) =>
+          this.state.guessed.has(c)
+        );
         if (allFound) {
           setTimeout(() => {
             alert("You win! 🎉");
+            this.handleWin();
             this.startNewGame();
           }, 10);
         }
@@ -56,6 +112,7 @@ class HangmanGame extends React.Component {
         this.setState({ wrongCount: nextWrong, missed: newMissed }, () => {
           setTimeout(() => {
             alert("Game Over");
+            this.handleLoss();
             this.startNewGame();
           }, 10);
         });
@@ -97,26 +154,51 @@ class HangmanGame extends React.Component {
   }
 
   render() {
-    const { wordList, curWordIndex, guessed, missed, wrongCount } = this.state;
-    const word = wordList[curWordIndex] ?? "";
+    const { playerName, onLogout } = this.props; // from App/Login
+    const {
+      wordList,
+      curWordIndex,
+      guessed,
+      missed,
+      wrongCount,
+      wins,
+      losses,
+    } = this.state;
 
-    // ✅ compute image path here (has access to wrongCount)
-    const imgSrc = `${process.env.PUBLIC_URL}/${pics[Math.min(wrongCount, pics.length - 1)]}`;
+    const word = wordList[curWordIndex] ?? "";
+    const imgSrc = `${process.env.PUBLIC_URL}/${
+      pics[Math.min(wrongCount, pics.length - 1)]
+    }`;
+
+    const totalGames = wins + losses; 
+    const winPct =
+      totalGames > 0 ? ((wins / totalGames) * 100).toFixed(1) : "0.0";
 
     return (
-      <div>
-        <img src={imgSrc} alt="hangman" />
-        <button onClick={this.startNewGame}>New Game</button>
+  <div>
+    {/* Player header / stats */}
+    <div style={{ marginBottom: "1rem" }}>
+      <p>
+        Player: <strong>{playerName}</strong>
+      </p>
+      <p>
+        Wins: {wins} | Losses: {losses} | Win %: {winPct}%
+      </p>
+      <button onClick={onLogout}>Logout</button>
+    </div>
 
-        <SingleLetterSearchbar onSearch={this.handleGuess} />
+    <img src={imgSrc} alt="hangman" />
+    <button onClick={this.startNewGame}>New Game</button>
 
-        {this.renderWordBoxes(word, guessed)}
-        <p>
-          <strong>Missed Letters:</strong>{" "}
-          {missed.length ? missed.join(", ") : "None yet"}
-        </p>
-      </div>
-    );
+    <SingleLetterSearchbar onSearch={this.handleGuess} />
+    {this.renderWordBoxes(word, guessed)}
+    <p>
+      <strong>Missed Letters:</strong>{" "}
+      {missed.length ? missed.join(", ") : "None yet"}
+    </p>
+  </div>
+);
+
   }
 }
 
